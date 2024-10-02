@@ -1,7 +1,11 @@
 [
-    { "x": 0, "y": 0, "name": "Corner City 1" },
-    { "x": 1298, "y": 0, "name": "Corner City 2" },
-    { "x": 0, "y": 1298, "name": "Corner City 3" },
-    { "x": 1298, "y": 1298, "name": "Corner City 4" }
+    { "type": "bear trap", "x": 0, "y": 0, "name": "Bear Trap" },
+    { "type": "city", "x": 10, "y": 10, "name": "City" },
+    { "type": "meat farm", "x": 20, "y": 20, "name": "Meat Farm" },
+    { "type": "wood farm", "x": 30, "y": 30, "name": "Wood Farm" },
+    { "type": "coal farm", "x": 40, "y": 40, "name": "Coal Farm" },
+    { "type": "iron farm", "x": 50, "y": 50, "name": "Iron Farm" },
+    { "type": "facility", "x": 60, "y": 60, "name": "Facility" },
+    { "type": "turret", "x": 70, "y": 70, "name": "Turret" },
+    { "type": "castle", "x": 80, "y": 80, "name": "Castle" }
 ]
-

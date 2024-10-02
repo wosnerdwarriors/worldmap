@@ -1,60 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Interactive Map with Buildings</title>
-	<style>
-		body, html {
-			margin: 0;
-			padding: 0;
-			height: 100%;
-			display: flex;
-		}
-		#mapCanvas {
-			flex-grow: 1;
-			background-color: #f0f0f0;
-			cursor: crosshair;
-		}
-		#sidebar {
-			width: 300px;
-			background-color: #e0e0e0;
-			display: flex;
-			flex-direction: column;
-			padding: 10px;
-		}
-		#buildingsTab {
-			flex-grow: 1;
-			overflow-y: auto;
-		}
-		#currentMousePosition {
-			margin-bottom: 10px;
-		}
-		.building-entry {
-			display: flex;
-			justify-content: space-between;
-			margin-bottom: 5px;
-		}
-		.controls {
-			position: absolute;
-			top: 10px;
-			left: 10px;
-			background: rgba(255, 255, 255, 0.8);
-			padding: 5px;
-			border-radius: 5px;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map with Buildings</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+        }
+        #mapCanvas {
+            flex-grow: 1;
+            background-color: lightgreen; /* Light green background for the map */
+            cursor: crosshair;
+        }
+        #sidebar {
+            width: 300px;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        #buildingsTab {
+            flex-grow: 1;
+            overflow-y: auto; /* Scrollbar by default */
+        }
+        #currentMousePosition {
+            margin-bottom: 10px;
+        }
+        .building-entry {
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+            padding: 5px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+        .building-entry:hover {
+            background-color: #e0e0e0;
+        }
+        #controls {
+            margin-bottom: 10px;
+        }
+        .tool-button {
+            padding: 10px;
+            margin-right: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            background-color: #ddd;
+        }
+        .tool-button.active {
+            border-color: #007bff;
+            background-color: #cce5ff;
+        }
+        #xyCoordinates {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-	<canvas id="mapCanvas"></canvas>
-	<div id="sidebar">
-		<div id="currentMousePosition">Mouse: (0, 0)</div>
-		<div id="buildingsTab">
-			<h3>Buildings</h3>
-			<div id="buildingsList"></div>
-		</div>
-	</div>
-	<script src="map.js"></script>
+    <canvas id="mapCanvas"></canvas>
+    <div id="sidebar">
+        <div id="currentMousePosition">Mouse: (0, 0)</div>
+        <div id="controls">
+            <button id="panButton" class="tool-button active">Pan</button>
+            <button id="buildButton" class="tool-button">Build</button>
+        </div>
+        <div class="controls">
+            <label for="buildingSelect">Building:</label>
+            <select id="buildingSelect">
+                <option value="bear trap">Bear Trap (B)</option>
+                <option value="city">City (C)</option>
+                <option value="meat farm">Meat Farm (M)</option>
+                <option value="wood farm">Wood Farm (W)</option>
+                <option value="coal farm">Coal Farm (C)</option>
+                <option value="iron farm">Iron Farm (I)</option>
+                <option value="facility">Facility (F)</option>
+                <option value="turret">Turret (T)</option>
+                <option value="castle">Castle ($)</option>
+            </select>
+        </div>
+        <div id="xyCoordinates">
+            <label for="xInput">X:</label>
+            <input type="number" id="xInput" value="0" min="0" max="1298">
+            <label for="yInput">Y:</label>
+            <input type="number" id="yInput" value="0" min="0" max="1298">
+            <button id="placeByXYButton">Place by Coordinates</button>
+        </div>
+        <div id="buildingsTab">
+            <h3>Buildings</h3>
+            <div id="buildingsList"></div>
+        </div>
+    </div>
+    <script src="map.js"></script>
 </body>
 </html>
-
