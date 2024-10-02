@@ -1,5 +1,7 @@
 const canvas = document.getElementById('mapCanvas');
 const ctx = canvas.getContext('2d');
+const buildingsList = document.getElementById('buildingsList');
+const currentMousePosition = document.getElementById('currentMousePosition');
 
 const gridSize = 1300;
 const squareSize = 20;
@@ -8,91 +10,151 @@ let panX = 0;
 let panY = 0;
 let isPanning = false;
 let startX, startY;
+let mouseX, mouseY;
 
 const cities = [];
 
+// Load default cities from buildings.json
+fetch('buildings.json')
+    .then(response => response.json())
+    .then(data => {
+        console.log('Loaded buildings:', data);
+        data.forEach(city => {
+            addCity(city.x, city.y, city.name);
+        });
+        drawGrid();
+        updateBuildingsList();
+    })
+    .catch(error => console.error('Error loading buildings:', error));
+
 function resizeCanvas() {
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
-	drawGrid();
+    console.log("Resizing canvas...");
+    canvas.width = window.innerWidth - 300; // Adjust for sidebar
+    canvas.height = window.innerHeight;
+    console.log("Canvas size set to:", canvas.width, canvas.height);
+    drawGrid();
 }
 
 function drawGrid() {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	const adjustedSquareSize = squareSize * zoomLevel;
+    console.log("Drawing grid...");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const adjustedSquareSize = squareSize * zoomLevel;
 
-	for (let x = -panX % adjustedSquareSize; x < canvas.width; x += adjustedSquareSize) {
-		for (let y = -panY % adjustedSquareSize; y < canvas.height; y += adjustedSquareSize) {
-			ctx.strokeStyle = '#ddd';
-			ctx.strokeRect(x, y, adjustedSquareSize, adjustedSquareSize);
-		}
-	}
+    // Calculate the visible grid range based on pan and zoom
+    const startX = Math.floor(panX / adjustedSquareSize);
+    const startY = Math.floor(panY / adjustedSquareSize);
+    const endX = Math.ceil((panX + canvas.width) / adjustedSquareSize);
+    const endY = Math.ceil((panY + canvas.height) / adjustedSquareSize);
 
-	// Draw cities
-	cities.forEach(city => {
-		ctx.fillStyle = 'blue';
-		const cityX = (city.x * squareSize - panX) * zoomLevel;
-		const cityY = (city.y * squareSize - panY) * zoomLevel;
-		ctx.fillRect(cityX, cityY, 2 * adjustedSquareSize, 2 * adjustedSquareSize);
-	});
+    console.log(`Drawing visible grid from (${startX}, ${startY}) to (${endX}, ${endY})`);
+
+    for (let x = startX; x < endX; x++) {
+        for (let y = startY; y < endY; y++) {
+            const screenX = (x * adjustedSquareSize) - panX;
+            const screenY = (y * adjustedSquareSize) - panY;
+
+            ctx.strokeStyle = '#ddd';
+            ctx.strokeRect(screenX, screenY, adjustedSquareSize, adjustedSquareSize);
+        }
+    }
+
+    // Draw cities
+    cities.forEach(city => {
+        console.log("Drawing city at:", city.x, city.y);
+        ctx.fillStyle = 'blue';
+        const cityX = (city.x * squareSize - panX) * zoomLevel;
+        const cityY = (city.y * squareSize - panY) * zoomLevel;
+        ctx.fillRect(cityX, cityY, 2 * adjustedSquareSize, 2 * adjustedSquareSize);
+    });
 }
 
-function addCity(x, y) {
-	cities.push({ x, y });
-	drawGrid();
+function addCity(x, y, name = "Unnamed City") {
+    if (x < 0 || y < 0 || x + 2 > gridSize || y + 2 > gridSize) {
+        alert("City placement is out of bounds!");
+        return;
+    }
+    const city = { x, y, name };
+    cities.push(city);
+    drawGrid();
+    updateBuildingsList();
 }
 
-// Zoom functionality
+function updateBuildingsList() {
+    buildingsList.innerHTML = '';
+    cities.forEach((city, index) => {
+        const buildingDiv = document.createElement('div');
+        buildingDiv.classList.add('building-entry');
+        buildingDiv.innerHTML = `
+            <span>(${city.x}, ${city.y})</span>
+            <input type="text" value="${city.name}" onchange="renameCity(${index}, this.value)">
+        `;
+        buildingsList.appendChild(buildingDiv);
+    });
+}
+
+function renameCity(index, newName) {
+    cities[index].name = newName;
+}
+
 function zoom(delta) {
-	const factor = 1.1;
-	const oldZoom = zoomLevel;
-	zoomLevel *= delta > 0 ? factor : 1 / factor;
-	const mouseX = (event.clientX - panX) / oldZoom;
-	const mouseY = (event.clientY - panY) / oldZoom;
-	panX = event.clientX - mouseX * zoomLevel;
-	panY = event.clientY - mouseY * zoomLevel;
-	drawGrid();
+    const factor = 1.1;
+    const oldZoom = zoomLevel;
+    zoomLevel *= delta > 0 ? 1 / factor : factor;
+
+    // Prevent zooming out too far
+    const minZoom = Math.min(canvas.width / (gridSize * squareSize), canvas.height / (gridSize * squareSize));
+    zoomLevel = Math.max(zoomLevel, minZoom);
+
+    const mouseGridX = (mouseX + panX) / oldZoom;
+    const mouseGridY = (mouseY + panY) / oldZoom;
+
+    panX = mouseX - mouseGridX * zoomLevel;
+    panY = mouseY - mouseGridY * zoomLevel;
+
+    drawGrid();
 }
 
 // Event Listeners
 canvas.addEventListener('mousedown', (e) => {
-	isPanning = true;
-	startX = e.clientX - panX;
-	startY = e.clientY - panY;
+    isPanning = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
 });
 
 canvas.addEventListener('mousemove', (e) => {
-	if (isPanning) {
-		panX = e.clientX - startX;
-		panY = e.clientY - startY;
-		drawGrid();
-	}
+    if (isPanning) {
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        drawGrid();
+    }
+
+    // Update mouse position
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    const gridMouseX = Math.floor((mouseX + panX) / (squareSize * zoomLevel));
+    const gridMouseY = Math.floor((mouseY + panY) / (squareSize * zoomLevel));
+    currentMousePosition.textContent = `Mouse: (${gridMouseX}, ${gridMouseY})`;
 });
 
 canvas.addEventListener('mouseup', () => {
-	isPanning = false;
+    isPanning = false;
 });
 
 canvas.addEventListener('wheel', (e) => {
-	e.preventDefault();
-	zoom(e.deltaY);
+    e.preventDefault();
+    zoom(e.deltaY);
 });
-
-// Zoom buttons
-document.getElementById('zoomInBtn').addEventListener('click', () => zoom(-1));
-document.getElementById('zoomOutBtn').addEventListener('click', () => zoom(1));
 
 // Add city with 'c' key press
 document.addEventListener('keydown', (e) => {
-	if (e.key === 'c') {
-		// Calculate which square is in the center
-		const centerX = Math.floor((canvas.width / 2 + panX) / (squareSize * zoomLevel));
-		const centerY = Math.floor((canvas.height / 2 + panY) / (squareSize * zoomLevel));
-		addCity(centerX, centerY);
-	}
+    if (e.key === 'c') {
+        // Calculate which square the mouse is currently over
+        const gridMouseX = Math.floor((mouseX + panX) / (squareSize * zoomLevel));
+        const gridMouseY = Math.floor((mouseY + panY) / (squareSize * zoomLevel));
+        addCity(gridMouseX, gridMouseY);
+    }
 });
 
 // Resize and initialize canvas
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
-

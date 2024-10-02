@@ -1,0 +1,7 @@
+[
+    { "x": 0, "y": 0, "name": "Corner City 1" },
+    { "x": 1298, "y": 0, "name": "Corner City 2" },
+    { "x": 0, "y": 1298, "name": "Corner City 3" },
+    { "x": 1298, "y": 1298, "name": "Corner City 4" }
+]
+
