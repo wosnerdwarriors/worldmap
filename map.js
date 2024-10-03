@@ -208,12 +208,89 @@ function updateBuildingsList() {
     });
 }
 
-// Jump to city
-function jumpToCity(x,    y) {
+// Handle pan/build mode toggling
+panButton.addEventListener('click', () => {
+    mode = 'pan';
+    panButton.classList.add('active');
+    buildButton.classList.remove('active');
+    debugLog('Switched to pan mode');
+});
+
+buildButton.addEventListener('click', () => {
+    mode = 'build';
+    buildButton.classList.add('active');
+    panButton.classList.remove('active');
+    debugLog('Switched to build mode');
+});
+
+// Handle building selection
+buildingSelect.addEventListener('change', (e) => {
+    selectedBuilding = e.target.value;
+    debugLog(`Selected building: ${selectedBuilding}`);
+});
+
+// Handle placing a building on the map
+canvas.addEventListener('click', (e) => {
+    if (mode === 'build') {
+        const gridMouseX = Math.floor((mouseX + panX) / (squareSize * zoomLevel));
+        const gridMouseY = Math.floor((mouseY + panY) / (squareSize * zoomLevel));
+        addBuilding(gridMouseX, gridMouseY, null, selectedBuilding); // Use selectedBuilding here
+        debugLog(`Placed building: ${selectedBuilding} at (${gridMouseX}, ${gridMouseY})`);
+    }
+});
+
+// Manual building placement using X, Y inputs
+placeByXYButton.addEventListener('click', () => {
+    const x = parseInt(xInput.value);
+    const y = parseInt(yInput.value);
+    addBuilding(x, y, null, selectedBuilding); // Use selectedBuilding here
+    debugLog(`Manually placed building: ${selectedBuilding} at (${x}, ${y})`);
+});
+
+// Add building to the grid
+function addBuilding(x, y, name, type) {
+    const building = buildingData[type]; // Get building details from the selected type
+    const buildingSize = building.size;
+
+    // Check if building placement is valid
+    if (x < 0 || y < 0 || x + buildingSize > gridSize || y + buildingSize > gridSize) {
+        alert("Building placement is invalid!");
+        return;
+    }
+
+    cities.push({ x, y, name, type });
+    drawGrid();
+    updateBuildingsList();
+    debugLog(`Added ${type} at (${x}, ${y})`);
+}
+
+// Update the buildings list
+function updateBuildingsList() {
+    if (!buildingsList) {
+        debugLog("Buildings list element not found");
+        return;
+    }
+    buildingsList.innerHTML = '';
+    cities.forEach((city, index) => {
+        const building = buildingData[city.type];
+        const buildingDiv = document.createElement('button');
+        buildingDiv.classList.add('building-entry');
+        let buildingDisplay = building.showName ? `${city.name} (Type: ${city.type})` : `${city.type}`;
+        buildingDiv.innerHTML = `${buildingDisplay} (${city.x}, ${city.y})`;
+        buildingDiv.addEventListener('click', () => {
+            jumpToBuilding(city.x, city.y);
+        });
+        buildingsList.appendChild(buildingDiv);
+        debugLog(`Added building to list: ${buildingDisplay}`);
+    });
+}
+
+// Jump to building
+function jumpToBuilding(x, y) {
     panX = (x * squareSize * zoomLevel) - (canvas.width / 2);
     panY = (y * squareSize * zoomLevel) - (canvas.height / 2);
     drawGrid();
-    debugLog(`Jumped to city at: (${x}, ${y})`);
+    debugLog(`Jumped to building at: (${x}, ${y})`);
 }
 
 // Resize canvas on window resize
